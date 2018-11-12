@@ -1,8 +1,3 @@
-"""Writes wall orientation in "ORIENTATION" wall parameter if it exists."""
-#pyRevit info
-__title__ = 'Wall\norientation'
-__author__  = 'Carlos Romero Carballo'
-
 
 #IMPORTS
 
