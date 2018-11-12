@@ -55,7 +55,7 @@ new_walls = []
 ori_x = []
 ori_y = []
 ExcludedWalls = []
-print("Walls in model: " + str(len(walls)))
+print("Total walls in model: " + str(len(walls)))
 
 #Collect only exterior walls from coll
 #Need to Filter out non-wall elements
@@ -88,7 +88,7 @@ else:
                                                 new_walls.append(wall)
                                 except:
                                                 print("Could not obtain wall orientation.")
-                print("Exterior Walls Ixxxxn: " + str(len(new_walls)))
+                print("Exterior Walls: " + str(len(new_walls)))
 
                 #normal transform (project to real north).
                 new_ori_x = list()
