@@ -72,7 +72,8 @@ for i in walls:
 for s in ExteriorWalls:
 	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
 			ExteriorWalls1.append(s)
-print("xxx: " + str(len(ExteriorWalls1)))
+
+
 		#DATA PROCESSING
 
 
