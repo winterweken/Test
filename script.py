@@ -73,9 +73,15 @@ for s in ExteriorWalls:
 	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
 			ExteriorWalls1.append(s)
 
+def GetWorkset(itemx):
+	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
+	else: return None
 
+for KKK in ExteriorWalls1:
+	PPP = GetWorkset(KKK)
 		#DATA PROCESSING
 
+print(PPP.Name)
 
 
 if type(ExteriorWalls1[0].LookupParameter("Comments")) != Parameter or ExteriorWalls1[0].LookupParameter("Comments").StorageType != DB.StorageType.String:
