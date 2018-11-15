@@ -1,4 +1,3 @@
-
 #IMPORTS
 
 #for timing
@@ -39,10 +38,11 @@ def vector_orientation (x, y):
                                 return "Northwest"
                 else:
                                 return "No orientation"
+								
+#get workset neames
 def GetWorkset(itemx):
 	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
 	else: return None
-
 
 
 #VARIABLES
@@ -55,8 +55,8 @@ uidoc = __revit__.ActiveUIDocument
 #Modify collector for exterior walls only
 angle = doc.ActiveProjectLocation.get_ProjectPosition(XYZ(0,0,0)).Angle * -1
 walls = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType().ToElements()
-#doors = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
-#windows = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
+doors = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
+windows = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
 
 new_walls = []
 ori_x = []
@@ -67,10 +67,20 @@ print("Total walls in model: " + str(len(walls)))
 
 #Collect only exterior walls from coll
 #Need to Filter out non-wall elements
+
+NWalls = []
+NEWalls = []
+EWalls = []
+SEWalls = []
+SWalls = []
+WWalls = []
+SWWalls = []
+NWWalls = []
 WallSort = []
 DirWall = []
 WallSortBool = []
 ex = []
+
 
 
 # Used for filtering out model in place elements
@@ -91,7 +101,7 @@ for i in walls:
 
 
 for p in WallSort:
-    if str(GetWorkset(p).Name) == "Hello":
+    if str(GetWorkset(p).Name) == "QAL_ENVELOPE":
         DirWall.append(p)
 
 print(GetWorkset(p).Name)
@@ -99,12 +109,11 @@ print(GetWorkset(p).Name)
 
 		#DATA PROCESSING
 
-
-
-
+#print(p)
 
 
 #initial wall normals.
+
 for wall in DirWall:
                 try:
                                 ori_x.append( round( wall.Orientation.Normalize().X , 4))
@@ -140,6 +149,85 @@ for wall, dir in zip(new_walls,res):
                                                 print("Could not write parameter in one of the walls.")
 t.Commit()
 
+
+
+
+#print(wall.LookupParameter("Comments").AsString)
+
+
+#Sort processed walls
+
+builtInParamType = BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS
+# get the type parameter
+
+for n in DirWall:
+	Comments = n.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "North":
+		NWalls.append(n)
+
+print("Number of North Facing Walls: " + str(len(NWalls)))
+
+for s in DirWall:
+	Comments = s.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "South":
+		SWalls.append(s)
+
+print("Number of South Facing Walls: " + str(len(SWalls)))
+
+for e in DirWall:
+	Comments = e.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "East":
+		EWalls.append(e)
+
+print("Number of East Facing Walls: " + str(len(EWalls)))
+
+for w in DirWall:
+	Comments = w.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "West":
+		WWalls.append(w)
+
+print("Number of West Facing Walls: " + str(len(WWalls)))
+
+for ne in DirWall:
+	Comments = ne.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "Northeast":
+		NEWalls.append(ne)
+
+print("Number of Northeast Facing Walls: " + str(len(NEWalls)))
+
+for se in DirWall:
+	Comments = se.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "Southeast":
+		SEWalls.append(se)
+
+print("Number of Southeast Facing Walls: " + str(len(SEWalls)))
+
+for sw in DirWall:
+	Comments = sw.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "Southwest":
+		SWWalls.append(sw)
+
+print("Number of Southwest Facing Walls: " + str(len(SWWalls)))
+
+for nw in DirWall:
+	Comments = nw.get_Parameter(builtInParamType)
+	
+	if Comments.AsString() == "Northwest":
+		NWWalls.append(nw)
+
+print("Number of Northwest Facing Walls: " + str(len(NWWalls)))
+
+
 #report time
+
+print("Total Number of Windows: " + str(len(windows)))
+print("Total Number of Doors: " + str(len(doors)))
 endtime ="It took me: " + str(timer.get_time()) + " seconds to perform this task."
 print(endtime)
