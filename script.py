@@ -59,30 +59,47 @@ print("Total walls in model: " + str(len(walls)))
 
 #Collect only exterior walls from coll
 #Need to Filter out non-wall elements
-ExteriorWalls = []
-ExteriorWalls1 = []
-ExteriorWallsBool = []
+WallSort = []
+DirWall = []
+WallSortBool = []
 ex = []
+
 for i in walls:
-	try:
-		ExteriorWallsBool.append(i.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior")
-		ExteriorWalls.append(i)
-	except:
-		ex.append(None)
-for s in ExteriorWalls:
-	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
-			ExteriorWalls1.append(s)
+ 	try:
+ 		WallSortBool.append(i.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior")
+ 		WallSort.append(i)
+ 	except:
+ 		ex.append(None)
+
+
+# ### Old
+# ###
+# for s in WallSort:
+# 	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
+# 			DirWall.append(s)
+
+def GetWorkset(itemx):
+	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
+	else: return None
+
+for p in WallSort:
+    if str(GetWorkset(p).Name) == "Hello":
+        DirWall.append(p)
+
+print(GetWorkset(p).Name)
 
 
 		#DATA PROCESSING
 
 
 
-if type(ExteriorWalls1[0].LookupParameter("Comments")) != Parameter or ExteriorWalls1[0].LookupParameter("Comments").StorageType != DB.StorageType.String:
+
+
+if type(DirWall[0].LookupParameter("Comments")) != Parameter or DirWall[0].LookupParameter("Comments").StorageType != DB.StorageType.String:
                 print("There is no ORIENTATION parameter with text StorageType in walls, create and/or assign it to wall category.")
 else:
                 #initial wall normals.
-                for wall in ExteriorWalls1:
+                for wall in DirWall:
                                 try:
                                                 ori_x.append( round( wall.Orientation.Normalize().X , 4))
                                                 ori_y.append( round( wall.Orientation.Normalize().Y , 4))
