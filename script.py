@@ -39,6 +39,10 @@ def vector_orientation (x, y):
                                 return "Northwest"
                 else:
                                 return "No orientation"
+def GetWorkset(itemx):
+	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
+	else: return None
+
 
 
 #VARIABLES
@@ -51,10 +55,14 @@ uidoc = __revit__.ActiveUIDocument
 #Modify collector for exterior walls only
 angle = doc.ActiveProjectLocation.get_ProjectPosition(XYZ(0,0,0)).Angle * -1
 walls = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType().ToElements()
+#doors = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
+#windows = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
+
 new_walls = []
 ori_x = []
 ori_y = []
 ExcludedWalls = []
+
 print("Total walls in model: " + str(len(walls)))
 
 #Collect only exterior walls from coll
@@ -64,6 +72,8 @@ DirWall = []
 WallSortBool = []
 ex = []
 
+
+# Used for filtering out model in place elements
 for i in walls:
  	try:
  		WallSortBool.append(i.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior")
@@ -78,9 +88,7 @@ for i in walls:
 # 	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
 # 			DirWall.append(s)
 
-def GetWorkset(itemx):
-	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
-	else: return None
+
 
 for p in WallSort:
     if str(GetWorkset(p).Name) == "Hello":
@@ -95,45 +103,43 @@ print(GetWorkset(p).Name)
 
 
 
-if type(DirWall[0].LookupParameter("Comments")) != Parameter or DirWall[0].LookupParameter("Comments").StorageType != DB.StorageType.String:
-                print("There is no ORIENTATION parameter with text StorageType in walls, create and/or assign it to wall category.")
-else:
-                #initial wall normals.
-                for wall in DirWall:
+
+#initial wall normals.
+for wall in DirWall:
+                try:
+                                ori_x.append( round( wall.Orientation.Normalize().X , 4))
+                                ori_y.append( round( wall.Orientation.Normalize().Y , 4))
+                                new_walls.append(wall)
+                except:
+                                print("Could not obtain wall orientation.")
+print("Exterior Walls: " + str(len(new_walls)))
+
+#normal transform (project to real north).
+new_ori_x = list()
+new_ori_y = list()
+for x, y in zip(ori_x, ori_y):
+                new_ori_x.append(project_to_real_north(x,y,angle)[0])
+                new_ori_y.append(project_to_real_north(x,y,angle)[1])
+
+#final vector orientation assignment.
+res = []
+for x, y in zip (new_ori_x,new_ori_y):
+                res.append(vector_orientation(x,y))
+
+
+#DB WRITE
+
+#transaction to write into DB.
+t = Transaction(doc, "Wall Orientation")
+t.Start()
+for wall, dir in zip(new_walls,res):
+                if wall.LookupParameter("Comments"):
                                 try:
-                                                ori_x.append( round( wall.Orientation.Normalize().X , 4))
-                                                ori_y.append( round( wall.Orientation.Normalize().Y , 4))
-                                                new_walls.append(wall)
+                                                wall.LookupParameter("Comments").Set(dir)
                                 except:
-                                                print("Could not obtain wall orientation.")
-                print("Exterior Walls: " + str(len(new_walls)))
+                                                print("Could not write parameter in one of the walls.")
+t.Commit()
 
-                #normal transform (project to real north).
-                new_ori_x = list()
-                new_ori_y = list()
-                for x, y in zip(ori_x, ori_y):
-                                new_ori_x.append(project_to_real_north(x,y,angle)[0])
-                                new_ori_y.append(project_to_real_north(x,y,angle)[1])
-
-                #final vector orientation assignment.
-                res = []
-                for x, y in zip (new_ori_x,new_ori_y):
-                                res.append(vector_orientation(x,y))
-
-
-                #DB WRITE
-
-                #transaction to write into DB.
-                t = Transaction(doc, "Wall Orientation")
-                t.Start()
-                for wall, dir in zip(new_walls,res):
-                                if wall.LookupParameter("Comments"):
-                                                try:
-                                                                wall.LookupParameter("Comments").Set(dir)
-                                                except:
-                                                                print("Could not write parameter in one of the walls.")
-                t.Commit()
-
-                #report time
-                endtime ="It took me: " + str(timer.get_time()) + " seconds to perform this task."
-                print(endtime)
+#report time
+endtime ="It took me: " + str(timer.get_time()) + " seconds to perform this task."
+print(endtime)
