@@ -177,6 +177,19 @@ for n in DirWall:
 		elif Comments.AsString() == "Northwest":
 				NWWalls.append(n)
 
+Nhosts = []
+Shost = []
+Ehost = []
+Whost = []
+
+for h in windows:
+	hosts = h.Host
+	Comments = hosts.get_Parameter(builtInParamType)
+	if Comments.AsString() == "North":
+				Nhosts.append(h)
+
+print('North Hosts: ' + str(len(Nhosts)))
+
 #reporting time
 
 print("Number of North Facing Walls: " + str(len(NWalls)))
