@@ -7,6 +7,7 @@ timer = Timer()
 #for the script to work
 import math
 import clr
+import sys
 import Autodesk.Revit.DB as DB
 from Autodesk.Revit.DB import *
 
@@ -38,7 +39,7 @@ def vector_orientation (x, y):
                                 return "Northwest"
                 else:
                                 return "No orientation"
-								
+
 #get workset neames
 def GetWorkset(itemx):
 	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
@@ -101,7 +102,7 @@ for i in walls:
 
 
 for p in WallSort:
-    if str(GetWorkset(p).Name) == "QAL_ENVELOPE":
+    if str(GetWorkset(p).Name) == "Hello":
         DirWall.append(p)
 
 print(GetWorkset(p).Name)
@@ -158,74 +159,37 @@ t.Commit()
 #Sort processed walls
 
 builtInParamType = BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS
-# get the type parameter
+    # get the type parameter
 
 for n in DirWall:
-	Comments = n.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "North":
-		NWalls.append(n)
+		Comments = n.get_Parameter(builtInParamType)
+		if Comments.AsString() == "North":
+				NWalls.append(n)
+		elif Comments.AsString() == "South":
+				SWalls.append(n)
+		elif Comments.AsString() == "East":
+				EWalls.append(n)
+		elif Comments.AsString() == "East":
+				EWalls.append(n)
+		elif Comments.AsString() == "Northeast":
+				NEWalls.append(n)
+		elif Comments.AsString() == "Southeast":
+				SEWalls.append(n)
+		elif Comments.AsString() == "Southwest":
+				SWWalls.append(n)
+		elif Comments.AsString() == "Northwest":
+				NWWalls.append(n)
+
+#reporting time
 
 print("Number of North Facing Walls: " + str(len(NWalls)))
-
-for s in DirWall:
-	Comments = s.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "South":
-		SWalls.append(s)
-
 print("Number of South Facing Walls: " + str(len(SWalls)))
-
-for e in DirWall:
-	Comments = e.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "East":
-		EWalls.append(e)
-
 print("Number of East Facing Walls: " + str(len(EWalls)))
-
-for w in DirWall:
-	Comments = w.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "West":
-		WWalls.append(w)
-
 print("Number of West Facing Walls: " + str(len(WWalls)))
-
-for ne in DirWall:
-	Comments = ne.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "Northeast":
-		NEWalls.append(ne)
-
 print("Number of Northeast Facing Walls: " + str(len(NEWalls)))
-
-for se in DirWall:
-	Comments = se.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "Southeast":
-		SEWalls.append(se)
-
 print("Number of Southeast Facing Walls: " + str(len(SEWalls)))
-
-for sw in DirWall:
-	Comments = sw.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "Southwest":
-		SWWalls.append(sw)
-
 print("Number of Southwest Facing Walls: " + str(len(SWWalls)))
-
-for nw in DirWall:
-	Comments = nw.get_Parameter(builtInParamType)
-	
-	if Comments.AsString() == "Northwest":
-		NWWalls.append(nw)
-
 print("Number of Northwest Facing Walls: " + str(len(NWWalls)))
-
-
-#report time
 
 print("Total Number of Windows: " + str(len(windows)))
 print("Total Number of Doors: " + str(len(doors)))
