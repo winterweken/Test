@@ -66,8 +66,6 @@ ExcludedWalls = []
 
 print("Total walls in model: " + str(len(walls)))
 
-#Collect only exterior walls from coll
-#Need to Filter out non-wall elements
 
 NWalls = []
 NEWalls = []
@@ -81,7 +79,6 @@ WallSort = []
 DirWall = []
 WallSortBool = []
 ex = []
-
 
 
 # Used for filtering out model in place elements
