@@ -19,7 +19,7 @@ def project_to_real_north(x, y, radians):
                 newY = -x * math.sin(radians) + y * math.cos(radians)
                 return round(newX, 4), round(newY, 4)
 
-#function that assigns an orientation to a 2D vector according to the Spanish CTE compass rose.
+#function that assigns an orientation to a 2D vector according a compass rose.
 def vector_orientation (x, y):
                 if x <= 0.3826 and x >= -0.3826 and y <= 1 and y >= 0.9238:
                                 return "North"
@@ -56,7 +56,7 @@ uidoc = __revit__.ActiveUIDocument
 #Modify collector for exterior walls only
 angle = doc.ActiveProjectLocation.get_ProjectPosition(XYZ(0,0,0)).Angle * -1
 walls = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType().ToElements()
-doors = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
+#doors = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
 windows = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
 
 new_walls = []
@@ -166,8 +166,8 @@ for n in DirWall:
 				SWalls.append(n)
 		elif Comments.AsString() == "East":
 				EWalls.append(n)
-		elif Comments.AsString() == "East":
-				EWalls.append(n)
+		elif Comments.AsString() == "West":
+				WWalls.append(n)
 		elif Comments.AsString() == "Northeast":
 				NEWalls.append(n)
 		elif Comments.AsString() == "Southeast":
@@ -178,18 +178,81 @@ for n in DirWall:
 				NWWalls.append(n)
 
 Nhosts = []
-Shost = []
-Ehost = []
-Whost = []
+Shosts = []
+Ehosts = []
+Whosts = []
 
+
+t2 = Transaction(doc, "Window Orientation")
+t2.Start()
 for h in windows:
 	hosts = h.Host
 	Comments = hosts.get_Parameter(builtInParamType)
-	if Comments.AsString() == "North":
-				Nhosts.append(h)
+	h.LookupParameter("Comments").Set(Comments.AsString())
 
-print('North Hosts: ' + str(len(Nhosts)))
 
+	#if Comments.AsString() == "North":
+	#			h.LookupParameter("Comments").Set(Comments.AsString())
+	#elif Comments
+
+t2.Commit()
+
+AreaParam = BuiltInParameter.HOST_AREA_COMPUTED
+total = []
+NTotal = []
+STotal = []
+ETotal = []
+WTotal = []
+
+for m in windows:
+		Comments = m.get_Parameter(builtInParamType)
+		Area = m.get_Parameter(AreaParam)
+		AreaCa = (Area.AsDouble()) / 10.764
+		if Comments.AsString() == "North":
+				Nhosts.append(m)
+				NTotal.append(AreaCa)
+		elif Comments.AsString() == "South":
+				Shosts.append(m)
+				STotal.append(AreaCa)
+		elif Comments.AsString() == "East":
+				Ehosts.append(m)
+				ETotal.append(AreaCa)
+		elif Comments.AsString() == "West":
+				Whosts.append(m)
+				WTotal.append(AreaCa)
+
+
+		#elif Comments.AsString() == "Northeast":
+		#		NEWalls.append(n)
+		#elif Comments.AsString() == "Southeast":
+		#		SEWalls.append(n)
+		#elif Comments.AsString() == "Southwest":
+		#		SWWalls.append(n)
+		#elif Comments.AsString() == "Northwest":
+		#		NWWalls.append(n)
+
+
+
+
+
+# get the type parameter
+
+
+
+
+#for NH in NHosts:
+	#Area = NH.get_Parameter(AreaParam)
+	#AreaCa = (Area.AsDouble()) / 10.764
+	#Ntotal.append(AreaCa)
+
+
+print('Total North Window: ' + str(sum(NTotal)) + 'Sq.M.')
+
+
+print('North Openings: ' + str(len(Nhosts)))
+print('South Openings: ' + str(len(Shosts)))
+print('East Openings: ' + str(len(Ehosts)))
+print('West Openings: ' + str(len(Whosts)))
 #reporting time
 
 print("Number of North Facing Walls: " + str(len(NWalls)))
@@ -202,6 +265,10 @@ print("Number of Southwest Facing Walls: " + str(len(SWWalls)))
 print("Number of Northwest Facing Walls: " + str(len(NWWalls)))
 
 print("Total Number of Windows: " + str(len(windows)))
-print("Total Number of Doors: " + str(len(doors)))
+
+
+
+
+#print("Total Number of Doors: " + str(len(doors)))
 endtime ="It took me: " + str(timer.get_time()) + " seconds to perform this task."
 print(endtime)
