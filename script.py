@@ -263,18 +263,18 @@ for m in windows:
 	#AreaCa = (Area.AsDouble()) / 10.764
 	#Ntotal.append(AreaCa)
 print(str(NWallArea))
-
-print('Total North Window: ' + str(sum(NTotal)) + 'Sq.M.')
+print('----------------------------------')
+print('Total North Window: ' + str(sum(NTotal)) + ' sq.m.')
 print('Total North Wall Area ' + str((sum(NWallArea) + sum(NTotal))))
 print('North WWR ' + str(round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1)) + '%')
-
+print('----------------------------------')
 
 print('North Openings: ' + str(len(Nhosts)))
 print('South Openings: ' + str(len(Shosts)))
 print('East Openings: ' + str(len(Ehosts)))
 print('West Openings: ' + str(len(Whosts)))
 #reporting time
-
+print('----------------------------------')
 print("Number of North Facing Walls: " + str(len(NWalls)))
 print("Number of South Facing Walls: " + str(len(SWalls)))
 print("Number of East Facing Walls: " + str(len(EWalls)))
@@ -283,7 +283,7 @@ print("Number of Northeast Facing Walls: " + str(len(NEWalls)))
 print("Number of Southeast Facing Walls: " + str(len(SEWalls)))
 print("Number of Southwest Facing Walls: " + str(len(SWWalls)))
 print("Number of Northwest Facing Walls: " + str(len(NWWalls)))
-
+print('----------------------------------')
 print("Total Number of Windows: " + str(len(windows)))
 
 
