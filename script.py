@@ -57,8 +57,8 @@ uidoc = __revit__.ActiveUIDocument
 angle = doc.ActiveProjectLocation.get_ProjectPosition(XYZ(0,0,0)).Angle * -1
 walls = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType().ToElements()
 #doors = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
-windows = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
-
+collwindows = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
+windows = []
 new_walls = []
 ori_x = []
 ori_y = []
@@ -79,7 +79,19 @@ WallSort = []
 DirWall = []
 WallSortBool = []
 ex = []
-
+AreaParam = BuiltInParameter.HOST_AREA_COMPUTED
+WallArea = BuiltInParameter.SURFACE_AREA
+total = []
+NTotal = []
+STotal = []
+ETotal = []
+WTotal = []
+Nhosts = []
+Shosts = []
+Ehosts = []
+Whosts = []
+NWallArea = []
+SWallArea = []
 
 # Used for filtering out model in place elements
 for i in walls:
@@ -96,7 +108,9 @@ for i in walls:
 # 	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
 # 			DirWall.append(s)
 
-
+for cw in collwindows:
+	if str(GetWorkset(cw).Name) == "Hello":
+		windows.append(cw)
 
 for p in WallSort:
     if str(GetWorkset(p).Name) == "Hello":
@@ -160,8 +174,11 @@ builtInParamType = BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS
 
 for n in DirWall:
 		Comments = n.get_Parameter(builtInParamType)
+		Area = n.get_Parameter(AreaParam)
+		AreaCa = round((Area.AsDouble()) / 10.7639, 1)
 		if Comments.AsString() == "North":
 				NWalls.append(n)
+				NWallArea.append(AreaCa)
 		elif Comments.AsString() == "South":
 				SWalls.append(n)
 		elif Comments.AsString() == "East":
@@ -177,10 +194,7 @@ for n in DirWall:
 		elif Comments.AsString() == "Northwest":
 				NWWalls.append(n)
 
-Nhosts = []
-Shosts = []
-Ehosts = []
-Whosts = []
+
 
 
 t2 = Transaction(doc, "Window Orientation")
@@ -197,29 +211,28 @@ for h in windows:
 
 t2.Commit()
 
-AreaParam = BuiltInParameter.HOST_AREA_COMPUTED
-total = []
-NTotal = []
-STotal = []
-ETotal = []
-WTotal = []
+HParam = BuiltInParameter.WINDOW_HEIGHT
+WParam = BuiltInParameter.WINDOW_WIDTH
+
 
 for m in windows:
 		Comments = m.get_Parameter(builtInParamType)
-		Area = m.get_Parameter(AreaParam)
-		AreaCa = (Area.AsDouble()) / 10.764
+		WindowType = (m.Document.GetElement(m.GetTypeId()))
+		Height = WindowType.get_Parameter(HParam)
+		Width = WindowType.get_Parameter(WParam)
+
 		if Comments.AsString() == "North":
 				Nhosts.append(m)
-				NTotal.append(AreaCa)
+				NTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 1))
 		elif Comments.AsString() == "South":
 				Shosts.append(m)
-				STotal.append(AreaCa)
+				STotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
 		elif Comments.AsString() == "East":
 				Ehosts.append(m)
-				ETotal.append(AreaCa)
+				ETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
 		elif Comments.AsString() == "West":
 				Whosts.append(m)
-				WTotal.append(AreaCa)
+				WTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
 
 
 		#elif Comments.AsString() == "Northeast":
@@ -237,6 +250,11 @@ for m in windows:
 
 # get the type parameter
 
+# get the type parameter
+
+
+
+
 
 
 
@@ -244,9 +262,11 @@ for m in windows:
 	#Area = NH.get_Parameter(AreaParam)
 	#AreaCa = (Area.AsDouble()) / 10.764
 	#Ntotal.append(AreaCa)
-
+print(str(NWallArea))
 
 print('Total North Window: ' + str(sum(NTotal)) + 'Sq.M.')
+print('Total North Wall Area ' + str((sum(NWallArea) + sum(NTotal))))
+print('North WWR ' + str(round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1)) + '%')
 
 
 print('North Openings: ' + str(len(Nhosts)))
