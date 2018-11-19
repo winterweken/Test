@@ -1,3 +1,8 @@
+"""Writes wall orientation in "ORIENTATION" wall parameter if it exists."""
+#pyRevit info
+__title__ = 'Wall\norientation'
+__author__  = 'Carlos Romero Carballo'
+
 
 #IMPORTS
 
@@ -55,58 +60,40 @@ new_walls = []
 ori_x = []
 ori_y = []
 ExcludedWalls = []
-print("Total walls in model: " + str(len(walls)))
+print("Walls in model: " + str(len(walls)))
 
 #Collect only exterior walls from coll
 #Need to Filter out non-wall elements
-WallSort = []
-DirWall = []
-WallSortBool = []
+ExteriorWalls = []
+ExteriorWalls1 = []
+ExteriorWallsBool = []
 ex = []
-
 for i in walls:
- 	try:
- 		WallSortBool.append(i.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior")
- 		WallSort.append(i)
- 	except:
- 		ex.append(None)
-
-
-# ### Old
-# ###
-# for s in WallSort:
-# 	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
-# 			DirWall.append(s)
-
-def GetWorkset(itemx):
-	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
-	else: return None
-
-for p in WallSort:
-    if str(GetWorkset(p).Name) == "Hello":
-        DirWall.append(p)
-
-print(GetWorkset(p).Name)
-
-
+	try:
+		ExteriorWallsBool.append(i.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior")
+		ExteriorWalls.append(i)
+	except:
+		ex.append(None)
+for s in ExteriorWalls:
+	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
+        ExteriorWalls1.append(s)
+		print("xxx: " + str(len(ExteriorWalls1)))
 		#DATA PROCESSING
 
 
 
-
-
-if type(DirWall[0].LookupParameter("Comments")) != Parameter or DirWall[0].LookupParameter("Comments").StorageType != DB.StorageType.String:
+if type(ExteriorWalls1[0].LookupParameter("Comments")) != Parameter or ExteriorWalls1[0].LookupParameter("Comments").StorageType != DB.StorageType.String:
                 print("There is no ORIENTATION parameter with text StorageType in walls, create and/or assign it to wall category.")
 else:
                 #initial wall normals.
-                for wall in DirWall:
+                for wall in ExteriorWalls1:
                                 try:
                                                 ori_x.append( round( wall.Orientation.Normalize().X , 4))
                                                 ori_y.append( round( wall.Orientation.Normalize().Y , 4))
                                                 new_walls.append(wall)
                                 except:
                                                 print("Could not obtain wall orientation.")
-                print("Exterior Walls: " + str(len(new_walls)))
+                print("Exterior Walls In: " + str(len(new_walls)))
 
                 #normal transform (project to real north).
                 new_ori_x = list()
