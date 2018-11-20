@@ -311,23 +311,25 @@ print("Number of Northwest Facing Walls: " + str(len(NWWalls)))
 print('----------------------------------')
 print("Total Number of Windows: " + str(len(windows)))
 
+
 output = script.get_output()
 output.set_width(600)
-chart = output.make_radar_chart()
+chart = output.make_line_chart()
+
 
 chart.data.labels = ['North', 'East', 'South', 'West']
 
 WallsChart = chart.data.new_dataset('Wall Total')
 WallsChart.data = [(sum(NWallArea) + sum(NTotal)), (sum(EWallArea) + sum(ETotal)), (sum(SWallArea) + sum(STotal)), (sum(WWallArea) + sum(WTotal))]
+WallsChart.set_color(233, 30, 99, 0.2)
+
 
 WindowsChart = chart.data.new_dataset('Window Openings')
 WindowsChart.data = [sum(NTotal), sum(ETotal), sum(STotal), sum(WTotal)]
+WindowsChart.set_color(3, 169, 244, 0.6)
 
 
-
-chart.randomize_colors()
-
-# Finally let's draw the chart
+#chart.randomize_colors()
 chart.draw()
 
 
