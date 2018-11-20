@@ -2,6 +2,8 @@
 
 #for timing
 from pyrevit.coreutils import Timer
+from pyrevit.output import charts
+from pyrevit import script
 timer = Timer()
 
 #for the script to work
@@ -92,6 +94,8 @@ Ehosts = []
 Whosts = []
 NWallArea = []
 SWallArea = []
+EWallArea = []
+WWallArea = []
 
 # Used for filtering out model in place elements
 for i in walls:
@@ -181,10 +185,13 @@ for n in DirWall:
 				NWallArea.append(AreaCa)
 		elif Comments.AsString() == "South":
 				SWalls.append(n)
+				SWallArea.append(AreaCa)
 		elif Comments.AsString() == "East":
 				EWalls.append(n)
+				EWallArea.append(AreaCa)
 		elif Comments.AsString() == "West":
 				WWalls.append(n)
+				WWallArea.append(AreaCa)
 		elif Comments.AsString() == "Northeast":
 				NEWalls.append(n)
 		elif Comments.AsString() == "Southeast":
@@ -223,7 +230,7 @@ for m in windows:
 
 		if Comments.AsString() == "North":
 				Nhosts.append(m)
-				NTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 1))
+				NTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
 		elif Comments.AsString() == "South":
 				Shosts.append(m)
 				STotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
@@ -264,9 +271,27 @@ for m in windows:
 	#Ntotal.append(AreaCa)
 print(str(NWallArea))
 print('----------------------------------')
-print('Total North Window: ' + str(sum(NTotal)) + ' sq.m.')
+print('Total North Window Area: ' + str(sum(NTotal)) + ' sq.m.')
 print('Total North Wall Area ' + str((sum(NWallArea) + sum(NTotal))))
 print('North WWR ' + str(round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1)) + '%')
+print('----------------------------------')
+
+print('----------------------------------')
+print('Total South Window Area: ' + str(sum(STotal)) + ' sq.m.')
+print('Total South Wall Area: ' + str((sum(SWallArea) + sum(STotal))))
+print('South WWR: ' + str(round((sum(STotal) / (sum(SWallArea) + sum(STotal)) * 100), 1)) + '%')
+print('----------------------------------')
+
+print('----------------------------------')
+print('Total East Window Area: ' + str(sum(ETotal)) + ' sq.m.')
+print('Total North Wall Area: ' + str((sum(EWallArea) + sum(ETotal))))
+print('East WWR: ' + str(round((sum(ETotal) / (sum(EWallArea) + sum(ETotal)) * 100), 1)) + '%')
+print('----------------------------------')
+
+print('----------------------------------')
+print('Total West Window Area: ' + str(sum(WTotal)) + ' sq.m.')
+print('Total West Wall Area: ' + str((sum(WWallArea) + sum(WTotal))))
+print('West WWR: ' + str(round((sum(WTotal) / (sum(WWallArea) + sum(WTotal)) * 100), 1)) + '%')
 print('----------------------------------')
 
 print('North Openings: ' + str(len(Nhosts)))
@@ -286,6 +311,24 @@ print("Number of Northwest Facing Walls: " + str(len(NWWalls)))
 print('----------------------------------')
 print("Total Number of Windows: " + str(len(windows)))
 
+output = script.get_output()
+output.set_width(600)
+chart = output.make_radar_chart()
+
+chart.data.labels = ['North', 'East', 'South', 'West']
+
+WallsChart = chart.data.new_dataset('Wall Total')
+WallsChart.data = [(sum(NWallArea) + sum(NTotal)), (sum(EWallArea) + sum(ETotal)), (sum(SWallArea) + sum(STotal)), (sum(WWallArea) + sum(WTotal))]
+
+WindowsChart = chart.data.new_dataset('Window Openings')
+WindowsChart.data = [sum(NTotal), sum(ETotal), sum(STotal), sum(WTotal)]
+
+
+
+chart.randomize_colors()
+
+# Finally let's draw the chart
+chart.draw()
 
 
 
