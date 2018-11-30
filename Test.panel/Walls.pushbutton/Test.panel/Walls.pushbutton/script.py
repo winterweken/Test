@@ -339,6 +339,7 @@ output.set_width(600)
 chart = output.make_bar_chart()
 
 
+
 chart.data.labels = ['North', 'Northeast', 'East', 'Southeast', 'South', 'Southwest', 'West', 'Northwest']
 
 WallsChart = chart.data.new_dataset('Wall Total')
