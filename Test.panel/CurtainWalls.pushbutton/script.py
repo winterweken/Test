@@ -15,6 +15,8 @@ from Autodesk.Revit.DB import *
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
 
+output = script.get_output()
+
 def tolist(TypeCheck):
 	if hasattr(TypeCheck,'__iter__'): return TypeCheck
 	else : return [TypeCheck]
@@ -23,15 +25,21 @@ def tolist(TypeCheck):
 walls = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType().ToElements()
 
 wallcheck = tolist(walls)
+CurtWalls = []
+CurtID = []
 
-for z in walls:
-	CurtWalls = [getattr(z, 'CurtainGrid', None) is not None for z in wallcheck]
-	if CurtWalls == True:
-		print('XX')
+#CurtWalls = [getattr(z, 'CurtainGrid', None) is not None for z in wallcheck]
+
+for z in wallcheck:
+	if getattr(z, 'CurtainGrid', None) is not None:
+		CurtWalls.append(z)
 
 
 
 
-print(CurtWalls)	
+#print(output.linkify(CurtWalls))
+for zz in CurtWalls:
+	print(output.linkify(zz.Id))
+print(CurtID)
 
 #print(getattr(w, 'CurtainGrid', None) is not None for w in walls)
