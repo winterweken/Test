@@ -42,32 +42,25 @@ def vector_orientation (x, y):
                 else:
                                 return "No orientation"
 
-#get workset names
+#get workset neames
 def GetWorkset(itemx):
 	if hasattr(itemx, "WorksetId"): return itemx.Document.GetWorksetTable().GetWorkset(itemx.WorksetId)
 	else: return None
 
-#Check for curtain walls
-def CurtainCheck(TypeCheck):
-	if hasattr(TypeCheck,'__iter__'): return TypeCheck
-	else : return [TypeCheck]
-	
-	
+
 #VARIABLES
 
 doc = __revit__.ActiveUIDocument.Document
 uidoc = __revit__.ActiveUIDocument
 
-
 #Angle between project north and real north (in radians).
 #final -1 "undoes" real to project north transformation.
-
+#Modify collector for exterior walls only
 angle = doc.ActiveProjectLocation.get_ProjectPosition(XYZ(0,0,0)).Angle * -1
 walls = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).WhereElementIsNotElementType().ToElements()
 #doors = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Doors).WhereElementIsNotElementType().ToElements()
 collwindows = DB.FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Windows).WhereElementIsNotElementType().ToElements()
 windows = []
-
 new_walls = []
 ori_x = []
 ori_y = []
@@ -84,45 +77,25 @@ SWalls = []
 WWalls = []
 SWWalls = []
 NWWalls = []
-
 WallSort = []
 DirWall = []
 WallSortBool = []
 ex = []
 AreaParam = BuiltInParameter.HOST_AREA_COMPUTED
 WallArea = BuiltInParameter.SURFACE_AREA
-HParam = BuiltInParameter.WINDOW_HEIGHT
-WParam = BuiltInParameter.WINDOW_WIDTH
-builtInParamType = BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS
 total = []
-
 NTotal = []
 STotal = []
 ETotal = []
 WTotal = []
-NETotal = []
-NWTotal = []
-SETotal = []
-SWTotal = []
-
 Nhosts = []
 Shosts = []
 Ehosts = []
 Whosts = []
-NEhosts = []
-NWhosts = []
-SEhosts = []
-SWhosts = []
-
-
 NWallArea = []
 SWallArea = []
 EWallArea = []
 WWallArea = []
-NEWallArea = []
-NWWallArea = []
-SEWallArea = []
-SWWallArea = []
 
 # Used for filtering out model in place elements
 for i in walls:
@@ -133,7 +106,11 @@ for i in walls:
  		ex.append(None)
 
 
-
+# ### Old
+# ###
+# for s in WallSort:
+# 	if s.WallType.get_Parameter(BuiltInParameter.FUNCTION_PARAM).AsValueString() == "Exterior":
+# 			DirWall.append(s)
 
 for cw in collwindows:
 	if str(GetWorkset(cw).Name) == "Hello":
@@ -146,8 +123,9 @@ for p in WallSort:
 print(GetWorkset(p).Name)
 
 
-#DATA PROCESSING
+		#DATA PROCESSING
 
+#print(p)
 
 
 #initial wall normals.
@@ -190,6 +168,12 @@ t.Commit()
 
 
 
+#print(wall.LookupParameter("Comments").AsString)
+
+
+#Sort processed walls
+
+builtInParamType = BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS
     # get the type parameter
 
 for n in DirWall:
@@ -210,22 +194,16 @@ for n in DirWall:
 				WWallArea.append(AreaCa)
 		elif Comments.AsString() == "Northeast":
 				NEWalls.append(n)
-				NEWallArea.append(AreaCa)
 		elif Comments.AsString() == "Southeast":
 				SEWalls.append(n)
-				SEWallArea.append(AreaCa)
 		elif Comments.AsString() == "Southwest":
 				SWWalls.append(n)
-				SWWallArea.append(AreaCa)
 		elif Comments.AsString() == "Northwest":
 				NWWalls.append(n)
-				NWWallArea.append(AreaCa)
 
 
 
 
-
-				
 t2 = Transaction(doc, "Window Orientation")
 t2.Start()
 for h in windows:
@@ -234,8 +212,14 @@ for h in windows:
 	h.LookupParameter("Comments").Set(Comments.AsString())
 
 
+	#if Comments.AsString() == "North":
+	#			h.LookupParameter("Comments").Set(Comments.AsString())
+	#elif Comments
+
 t2.Commit()
 
+HParam = BuiltInParameter.WINDOW_HEIGHT
+WParam = BuiltInParameter.WINDOW_WIDTH
 
 
 for m in windows:
@@ -256,70 +240,64 @@ for m in windows:
 		elif Comments.AsString() == "West":
 				Whosts.append(m)
 				WTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
-		elif Comments.AsString() == "Northeast":
-				NEhosts.append(n)
-				NETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
-		elif Comments.AsString() == "Southeast":
-				SEhosts.append(n)
-				SETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
-		elif Comments.AsString() == "Southwest":
-				SWhosts.append(n)
-				SWTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
-		elif Comments.AsString() == "Northwest":
-				NWhosts.append(n)
-				NWTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+
+
+		#elif Comments.AsString() == "Northeast":
+		#		NEWalls.append(n)
+		#elif Comments.AsString() == "Southeast":
+		#		SEWalls.append(n)
+		#elif Comments.AsString() == "Southwest":
+		#		SWWalls.append(n)
+		#elif Comments.AsString() == "Northwest":
+		#		NWWalls.append(n)
+
+
+
 
 
 # get the type parameter
 
-
-## Conditional in case a value = 00
-
+# get the type parameter
 
 
-if (round((sum(NTotal)) / (sum(NWallArea)) + sum(NTotal))) > 0:
-	print('----------------------------------')
-	print('Total North Window Area: ' + str(sum(NTotal)) + ' sq.m.')
-	print('Total North Wall Area ' + str((sum(NWallArea) + sum(NTotal))))
-	print('North WWR ' + str(round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1)) + '%')
-	print('----------------------------------')
-else:
-	print('North Elements Total to 0')
 
-if (round((sum(STotal)) / (sum(SWallArea)) + sum(STotal))) > 0:
-	print('----------------------------------')
-	print('Total South Window Area: ' + str(sum(STotal)) + ' sq.m.')
-	print('Total South Wall Area: ' + str((sum(SWallArea) + sum(STotal))))
-	print('South WWR: ' + str(round((sum(STotal) / (sum(SWallArea) + sum(STotal)) * 100), 1)) + '%')
-	print('----------------------------------')
-else:
-	print('South Elements Total to 0')
 
-if (round((sum(ETotal)) / (sum(EWallArea)) + sum(ETotal))) > 0:	
-	print('----------------------------------')
-	print('Total East Window Area: ' + str(sum(ETotal)) + ' sq.m.')
-	print('Total North Wall Area: ' + str((sum(EWallArea) + sum(ETotal))))
-	print('East WWR: ' + str(round((sum(ETotal) / (sum(EWallArea) + sum(ETotal)) * 100), 1)) + '%')
-	print('----------------------------------')
-else:
-	print('East Elements Total to 0')
-	
-if (round((sum(WTotal)) / (sum(WWallArea)) + sum(WTotal))) > 0:	
-	print('----------------------------------')
-	print('Total West Window Area: ' + str(sum(WTotal)) + ' sq.m.')
-	print('Total West Wall Area: ' + str((sum(WWallArea) + sum(WTotal))))
-	print('West WWR: ' + str(round((sum(WTotal) / (sum(WWallArea) + sum(WTotal)) * 100), 1)) + '%')
-	print('----------------------------------')
-else:
-	print('West Elements Total to 0')
 
+
+
+#for NH in NHosts:
+	#Area = NH.get_Parameter(AreaParam)
+	#AreaCa = (Area.AsDouble()) / 10.764
+	#Ntotal.append(AreaCa)
+print(str(NWallArea))
+print('----------------------------------')
+print('Total North Window Area: ' + str(sum(NTotal)) + ' sq.m.')
+print('Total North Wall Area ' + str((sum(NWallArea) + sum(NTotal))))
+print('North WWR ' + str(round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1)) + '%')
+print('----------------------------------')
+
+print('----------------------------------')
+print('Total South Window Area: ' + str(sum(STotal)) + ' sq.m.')
+print('Total South Wall Area: ' + str((sum(SWallArea) + sum(STotal))))
+print('South WWR: ' + str(round((sum(STotal) / (sum(SWallArea) + sum(STotal)) * 100), 1)) + '%')
+print('----------------------------------')
+
+print('----------------------------------')
+print('Total East Window Area: ' + str(sum(ETotal)) + ' sq.m.')
+print('Total North Wall Area: ' + str((sum(EWallArea) + sum(ETotal))))
+print('East WWR: ' + str(round((sum(ETotal) / (sum(EWallArea) + sum(ETotal)) * 100), 1)) + '%')
+print('----------------------------------')
+
+print('----------------------------------')
+print('Total West Window Area: ' + str(sum(WTotal)) + ' sq.m.')
+print('Total West Wall Area: ' + str((sum(WWallArea) + sum(WTotal))))
+print('West WWR: ' + str(round((sum(WTotal) / (sum(WWallArea) + sum(WTotal)) * 100), 1)) + '%')
+print('----------------------------------')
 
 print('North Openings: ' + str(len(Nhosts)))
 print('South Openings: ' + str(len(Shosts)))
 print('East Openings: ' + str(len(Ehosts)))
 print('West Openings: ' + str(len(Whosts)))
-
-
 #reporting time
 print('----------------------------------')
 print("Number of North Facing Walls: " + str(len(NWalls)))
@@ -336,24 +314,20 @@ print("Total Number of Windows: " + str(len(windows)))
 
 output = script.get_output()
 output.set_width(600)
-chart = output.make_bar_chart()
+chart = output.make_line_chart()
 
 
-
-chart.data.labels = ['North', 'Northeast', 'East', 'Southeast', 'South', 'Southwest', 'West', 'Northwest']
+chart.data.labels = ['North', 'East', 'South', 'West']
 
 WallsChart = chart.data.new_dataset('Wall Total')
-WallsChart.data = [100, 100, 100, 100, 100, 100, 100, 100]
-WallsChart.set_color(233, 30, 99, 0.3)
+WallsChart.data = [(sum(NWallArea) + sum(NTotal)), (sum(EWallArea) + sum(ETotal)), (sum(SWallArea) + sum(STotal)), (sum(WWallArea) + sum(WTotal))]
+WallsChart.set_color(233, 30, 99, 0.2)
 
 
 WindowsChart = chart.data.new_dataset('Window Openings')
-WindowsChart.data = [round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1), 13]
+WindowsChart.data = [sum(NTotal), sum(ETotal), sum(STotal), sum(WTotal)]
 WindowsChart.set_color(3, 169, 244, 0.6)
 
-#FortyMark = chart.data.new_dataset('40% Mark')
-#FortyMark.data = [(((sum(NWallArea)) + (sum(NTotal))) * .4), (((sum(NEWallArea)) + (sum(NETotal))) * .4)]
-#FortyMark.set_color(51, 255, 54, 0.7)
 
 #chart.randomize_colors()
 chart.draw()
