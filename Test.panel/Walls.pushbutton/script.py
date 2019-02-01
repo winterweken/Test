@@ -124,6 +124,8 @@ NWWallArea = []
 SEWallArea = []
 SWWallArea = []
 
+CPWall = []
+
 # Used for filtering out model in place elements
 for i in walls:
  	try:
@@ -136,19 +138,23 @@ for i in walls:
 
 
 for cw in collwindows:
-	if str(GetWorkset(cw).Name) == "Hello":
+	if str(GetWorkset(cw).Name) == "QAL_ENVELOPE":
 		windows.append(cw)
 
 for p in WallSort:
-    if str(GetWorkset(p).Name) == "Hello":
-        DirWall.append(p)
+		if str(GetWorkset(p).Name) == "QAL_ENVELOPE":
+			if (getattr(p, 'CurtainGrid', None) is not None) == True:
+				CPWall.append(p)
+			else:
+				DirWall.append(p)
 
+		
 print(GetWorkset(p).Name)
-
+print('Number of Curtain Walls: ' + str(len(CPWall)))
 
 #DATA PROCESSING
 
-
+new_CPwalls = []
 
 #initial wall normals.
 
@@ -161,19 +167,45 @@ for wall in DirWall:
                                 print("Could not obtain wall orientation.")
 print("Exterior Walls: " + str(len(new_walls)))
 
+CPori_x = []
+CPori_y = []
+
+for zz in CPWall:
+                try:
+                                CPori_x.append( round( zz.Orientation.Normalize().X , 4))
+                                CPori_y.append( round( zz.Orientation.Normalize().Y , 4))
+                                new_CPwalls.append(zz)
+                except:
+                                print("Could not obtain wall orientation.")
+
 #normal transform (project to real north).
 new_ori_x = list()
 new_ori_y = list()
 for x, y in zip(ori_x, ori_y):
                 new_ori_x.append(project_to_real_north(x,y,angle)[0])
                 new_ori_y.append(project_to_real_north(x,y,angle)[1])
+				
+new_CPori_x = list()
+new_CPori_y = list()
+
+
+
+#Invert curtain walls, b/c curtain...walls...
+				
+for x, y in zip(CPori_x, CPori_y):
+                new_CPori_x.append(project_to_real_north(x,y,angle)[0] * -1)
+                new_CPori_y.append(project_to_real_north(x,y,angle)[1] * -1)			
 
 #final vector orientation assignment.
 res = []
+CPres = []
 for x, y in zip (new_ori_x,new_ori_y):
                 res.append(vector_orientation(x,y))
+				
+for x, y in zip (new_CPori_x,new_CPori_y):
+                CPres.append(vector_orientation(x,y))
 
-
+#print(CPres)
 #DB WRITE
 
 #transaction to write into DB.
@@ -185,6 +217,16 @@ for wall, dir in zip(new_walls,res):
                                                 wall.LookupParameter("Comments").Set(dir)
                                 except:
                                                 print("Could not write parameter in one of the walls.")
+for zz, dir in zip(new_CPwalls,CPres):
+                if zz.LookupParameter("Comments"):
+                                try:
+                                                zz.LookupParameter("Comments").Set(dir)
+                                except:
+                                                print("Could not write parameter in one of the walls.")
+
+												
+												
+												
 t.Commit()
 
 
@@ -195,7 +237,7 @@ t.Commit()
 for n in DirWall:
 		Comments = n.get_Parameter(builtInParamType)
 		Area = n.get_Parameter(AreaParam)
-		AreaCa = round((Area.AsDouble()) / 10.7639, 1)
+		AreaCa = round((Area.AsDouble()) / 10.7639, 3)
 		if Comments.AsString() == "North":
 				NWalls.append(n)
 				NWallArea.append(AreaCa)
@@ -222,7 +264,34 @@ for n in DirWall:
 				NWWallArea.append(AreaCa)
 
 
-
+for nx in CPWall:
+		Comments = nx.get_Parameter(builtInParamType)
+		Area = nx.get_Parameter(AreaParam)
+		AreaCa = round((Area.AsDouble()) / 10.7639, 3)
+		if Comments.AsString() == "North":
+				
+				NTotal.append(AreaCa)
+		elif Comments.AsString() == "South":
+				
+				STotal.append(AreaCa)
+		elif Comments.AsString() == "East":
+				
+				ETotal.append(AreaCa)
+		elif Comments.AsString() == "West":
+				
+				WTotal.append(AreaCa)
+		elif Comments.AsString() == "Northeast":
+				
+				NETotal.append(AreaCa)
+		elif Comments.AsString() == "Southeast":
+				
+				SETotal.append(AreaCa)
+		elif Comments.AsString() == "Southwest":
+				
+				SWTotal.append(AreaCa)
+		elif Comments.AsString() == "Northwest":
+				
+				NWTotal.append(AreaCa)
 
 
 				
@@ -246,28 +315,28 @@ for m in windows:
 
 		if Comments.AsString() == "North":
 				Nhosts.append(m)
-				NTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				NTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 		elif Comments.AsString() == "South":
 				Shosts.append(m)
-				STotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				STotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 		elif Comments.AsString() == "East":
 				Ehosts.append(m)
-				ETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				ETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 		elif Comments.AsString() == "West":
 				Whosts.append(m)
-				WTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				WTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 		elif Comments.AsString() == "Northeast":
 				NEhosts.append(n)
-				NETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				NETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 		elif Comments.AsString() == "Southeast":
 				SEhosts.append(n)
-				SETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				SETotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 		elif Comments.AsString() == "Southwest":
 				SWhosts.append(n)
-				SWTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				SWTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 		elif Comments.AsString() == "Northwest":
 				NWhosts.append(n)
-				NWTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639))
+				NWTotal.append(round((Height.AsDouble() * Width.AsDouble()) / 10.7639, 3))
 
 
 # get the type parameter
@@ -277,42 +346,86 @@ for m in windows:
 
 
 
-if (round((sum(NTotal)) / (sum(NWallArea)) + sum(NTotal))) > 0:
+try:
+	(round((sum(NTotal)) / (sum(NWallArea)) + sum(NTotal)))
 	print('----------------------------------')
 	print('Total North Window Area: ' + str(sum(NTotal)) + ' sq.m.')
 	print('Total North Wall Area ' + str((sum(NWallArea) + sum(NTotal))))
 	print('North WWR ' + str(round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1)) + '%')
 	print('----------------------------------')
-else:
+except:
 	print('North Elements Total to 0')
 
-if (round((sum(STotal)) / (sum(SWallArea)) + sum(STotal))) > 0:
+try:
+	(round((sum(STotal)) / (sum(SWallArea)) + sum(STotal))) > 0
 	print('----------------------------------')
 	print('Total South Window Area: ' + str(sum(STotal)) + ' sq.m.')
 	print('Total South Wall Area: ' + str((sum(SWallArea) + sum(STotal))))
 	print('South WWR: ' + str(round((sum(STotal) / (sum(SWallArea) + sum(STotal)) * 100), 1)) + '%')
 	print('----------------------------------')
-else:
+except:
 	print('South Elements Total to 0')
 
-if (round((sum(ETotal)) / (sum(EWallArea)) + sum(ETotal))) > 0:	
+try:
+	(round((sum(ETotal)) / (sum(EWallArea)) + sum(ETotal))) > 0	
 	print('----------------------------------')
 	print('Total East Window Area: ' + str(sum(ETotal)) + ' sq.m.')
 	print('Total North Wall Area: ' + str((sum(EWallArea) + sum(ETotal))))
 	print('East WWR: ' + str(round((sum(ETotal) / (sum(EWallArea) + sum(ETotal)) * 100), 1)) + '%')
 	print('----------------------------------')
-else:
+except:
 	print('East Elements Total to 0')
 	
-if (round((sum(WTotal)) / (sum(WWallArea)) + sum(WTotal))) > 0:	
+try:
+	(round((sum(WTotal)) / (sum(WWallArea)) + sum(WTotal))) > 0	
 	print('----------------------------------')
 	print('Total West Window Area: ' + str(sum(WTotal)) + ' sq.m.')
 	print('Total West Wall Area: ' + str((sum(WWallArea) + sum(WTotal))))
 	print('West WWR: ' + str(round((sum(WTotal) / (sum(WWallArea) + sum(WTotal)) * 100), 1)) + '%')
 	print('----------------------------------')
-else:
+except:
 	print('West Elements Total to 0')
+	
+try:
+	(round((sum(NETotal)) / (sum(NEWallArea)) + sum(NETotal)))
+	print('----------------------------------')
+	print('Total Northeast Window Area: ' + str(sum(NETotal)) + ' sq.m.')
+	print('Total Northeast Wall Area ' + str((sum(NEWallArea) + sum(NETotal))))
+	print('Northeast WWR ' + str(round((sum(NETotal) / (sum(NEWallArea) + sum(NETotal)) * 100), 1)) + '%')
+	print('----------------------------------')
+except:
+	print('Northeast Elements Total to 0')
+	
+try:
+	(round((sum(SETotal)) / (sum(SEWallArea)) + sum(SETotal))) > 0
+	print('----------------------------------')
+	print('Total Southeast Window Area: ' + str(sum(SEotal)) + ' sq.m.')
+	print('Total Southeast Wall Area: ' + str((sum(SEWallArea) + sum(SETotal))))
+	print('Southeast WWR: ' + str(round((sum(SETotal) / (sum(SEWallArea) + sum(SETotal)) * 100), 1)) + '%')
+	print('----------------------------------')
+except:
+	print('Southeast Elements Total to 0')
 
+try:
+	(round((sum(SWTotal)) / (sum(SWWallArea)) + sum(SWTotal))) > 0
+	print('----------------------------------')
+	print('Total Southwest Window Area: ' + str(sum(SWTotal)) + ' sq.m.')
+	print('Total Southwest Wall Area: ' + str((sum(SWWallArea) + sum(SWTotal))))
+	print('South WWR: ' + str(round((sum(SWTotal) / (sum(SWWallArea) + sum(SWTotal)) * 100), 1)) + '%')
+	print('----------------------------------')
+except:
+	print('Southwest Elements Total to 0')
+	
+try:
+	(round((sum(NWTotal)) / (sum(NWWallArea)) + sum(NWTotal)))
+	print('----------------------------------')
+	print('Total Northwest Window Area: ' + str(sum(NTotal)) + ' sq.m.')
+	print('Total Northwest Wall Area ' + str((sum(NWWallArea) + sum(NWTotal))))
+	print('North WWR ' + str(round((sum(NWTotal) / (sum(NWWallArea) + sum(NWTotal)) * 100), 1)) + '%')
+	print('----------------------------------')
+except:
+	print('Northwest Elements Total to 0')
+	
 
 print('North Openings: ' + str(len(Nhosts)))
 print('South Openings: ' + str(len(Shosts)))
@@ -335,7 +448,7 @@ print("Total Number of Windows: " + str(len(windows)))
 
 
 output = script.get_output()
-output.set_width(600)
+output.set_width(900)
 chart = output.make_bar_chart()
 
 
@@ -346,9 +459,46 @@ WallsChart = chart.data.new_dataset('Wall Total')
 WallsChart.data = [100, 100, 100, 100, 100, 100, 100, 100]
 WallsChart.set_color(233, 30, 99, 0.3)
 
+try:
+	NChart = round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1)
+except:
+	NChart= 0
+
+try:	
+	SChart = round((sum(STotal) / (sum(SWallArea) + sum(STotal)) * 100), 1)
+except:
+	SChart = 0
+
+try:	
+	EChart = round((sum(ETotal) / (sum(EWallArea) + sum(ETotal)) * 100), 1)
+except:
+	EChart = 0
+
+try:
+	WChart = round((sum(WTotal) / (sum(WWallArea) + sum(WTotal)) * 100), 1)
+except:
+	WChart = 0
+
+try:
+	NEChart = round((sum(NETotal) / (sum(NEWallArea) + sum(NETotal)) * 100), 1)
+except:
+	NEChart = 0
+try:
+	SEChart = round((sum(SETotal) / (sum(SEWallArea) + sum(SETotal)) * 100), 1)
+except:
+	SEChart = 0
+try:
+	SWChart = round((sum(SWTotal) / (sum(SWWallArea) + sum(SWTotal)) * 100), 1)
+except:
+	SWChart = 0 
+
+try:
+	NWChart = round((sum(NWTotal) / (sum(NWWallArea) + sum(NWTotal)) * 100), 1)
+except:
+	NWChart = 0
 
 WindowsChart = chart.data.new_dataset('Window Openings')
-WindowsChart.data = [round((sum(NTotal) / (sum(NWallArea) + sum(NTotal)) * 100), 1), 13]
+WindowsChart.data = [NChart, NEChart, EChart, SEChart, SChart, SWChart, WChart, NWChart]
 WindowsChart.set_color(3, 169, 244, 0.6)
 
 #FortyMark = chart.data.new_dataset('40% Mark')
